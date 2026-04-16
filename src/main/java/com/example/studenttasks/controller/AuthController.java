@@ -3,7 +3,10 @@ package com.example.studenttasks.controller;
 
 import com.example.studenttasks.model.dto.request.AuthLoginRequest;
 import com.example.studenttasks.model.dto.request.UserRegistrationRequest;
+import com.example.studenttasks.model.dto.response.AuthTokenResponse;
 import com.example.studenttasks.model.dto.response.UserResponse;
+import com.example.studenttasks.security.CustomUserDetailsService;
+import com.example.studenttasks.security.JwtUtil;
 import com.example.studenttasks.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -12,6 +15,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,10 +27,14 @@ public class AuthController {
 
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final CustomUserDetailsService userDetailsService;
 
-    public AuthController(UserService userService, AuthenticationManager authenticationManager) {
+    public AuthController(UserService userService, AuthenticationManager authenticationManager,  JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
+        this.userDetailsService = userDetailsService;
     }
 
     @PostMapping("/register")
@@ -36,12 +44,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody AuthLoginRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
+    public ResponseEntity<AuthTokenResponse> login(@Valid @RequestBody AuthLoginRequest request) {
+        authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return ResponseEntity.ok("User logged in successfully");
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+        String jwtToken = jwtUtil.generateToken(userDetails);
+
+        return ResponseEntity.ok(new AuthTokenResponse(jwtToken));
     }
 }
