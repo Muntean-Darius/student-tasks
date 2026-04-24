@@ -1,0 +1,7 @@
+services:
+  app:
+    image: student-tasks-app
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
