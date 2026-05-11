@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: student-tasks-app
+  labels:
+    app: student-tasks-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: student-tasks-app
+  template:
+    metadata:
+      labels:
+        app: student-tasks-app
+    spec:
+      containers:
+        - name: student-tasks-app
+          image: student-tasks:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres:5432/student_tasks
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: student-tasks-secret
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: student-tasks-secret
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: student-tasks-secret
+                  key: JWT_SECRET

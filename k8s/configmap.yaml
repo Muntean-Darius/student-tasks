@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: student-tasks-config
+data:
+  DB_NAME: student_tasks
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/student_tasks
